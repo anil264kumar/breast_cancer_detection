@@ -44,7 +44,7 @@ async function test() {
 
     console.log("\n    All tests passed. MongoDB is working correctly.\n");
   } catch (err) {
-    console.error("\n  ❌  Connection failed:", err.message);
+    console.error("\n    Connection failed:", err.message);
     console.error("\n  Troubleshooting:");
     console.error('    - Local MongoDB: run "mongod" or check MongoDB service');
     console.error("    - Atlas: verify MONGODB_URI in backend/.env");

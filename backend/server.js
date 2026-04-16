@@ -17,10 +17,11 @@ const rateLimit = require("express-rate-limit");
 const { connectDB } = require("./db/connection");
 
 // ── Routes ────────────────────────────────────────────────────────────────
-const healthRouter = require("./routes/health");
-const predictRouter = require("./routes/predict");
-const scansRouter = require("./routes/scans");
-const patientsRouter = require("./routes/patients");
+const healthRouter   = require('./routes/health');
+const predictRouter  = require('./routes/predict');
+const scansRouter    = require('./routes/scans');
+const patientsRouter = require('./routes/patients');
+const authRouter     = require('./routes/auth');
 
 const app = express();
 const PORT = parseInt(process.env.PORT || "5000", 10);
@@ -77,11 +78,15 @@ app.use(
   }),
 );
 
+const notificationsRouter= require('./routes/notifications');
+
 // ── Routes ────────────────────────────────────────────────────────────────
-app.use("/api/health", healthRouter);
-app.use("/api/predict", predictRouter);
-app.use("/api/scans", scansRouter);
-app.use("/api/patients", patientsRouter);
+app.use('/api/health',        healthRouter);
+app.use('/api/predict',       predictRouter);
+app.use('/api/scans',         scansRouter);
+app.use('/api/patients',      patientsRouter);
+app.use('/api/auth',          authRouter);
+app.use('/api/notifications', notificationsRouter);
 
 // ── Root info ─────────────────────────────────────────────────────────────
 app.get("/", (_req, res) =>

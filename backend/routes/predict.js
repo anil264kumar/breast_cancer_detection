@@ -11,7 +11,7 @@ const fs       = require('fs');
 const { upload }           = require('../middleware/upload');
 const { callMLService }    = require('../utils/mlService');
 const { recordScanStats }  = require('../utils/analyticsHelper');
-const { Scan, Patient }    = require('../models/mongoose');
+const { Scan, Patient, Notification, User } = require('../models/mongoose');
 
 router.post('/', upload.single('file'), async (req, res) => {
   if (!req.file) {
@@ -97,6 +97,20 @@ router.post('/', upload.single('file'), async (req, res) => {
 
     // ── 4. Increment daily analytics ────────────────────────────────
     await recordScanStats(clerkUserId, scan);
+
+    // ── 4b. Create Notification for the Clinician ───────────────────
+    if (clerkUserId !== 'anonymous') {
+      // Find the user's ObjectId in our DB (since clerkUserId might be a local ObjectId or a Clerk String ID)
+      const dbUser = await User.findOne({ $or: [{ clerkId: clerkUserId }, { _id: clerkUserId.length === 24 ? clerkUserId : null }] });
+      if (dbUser) {
+        await Notification.create({
+          userId: dbUser._id,
+          title: 'Analysis Complete',
+          body: `Mammogram analysis for ${patient_name || 'Anonymous'} finished. Risk level: ${data.risk_level}.`,
+          unread: true
+        });
+      }
+    }
 
     // ── 5. Increment patient scan count (if new patient created above) ─
     if (patient_name || patient_mrn) {
