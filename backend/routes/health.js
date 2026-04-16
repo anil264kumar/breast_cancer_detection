@@ -7,7 +7,7 @@ const express = require('express');
 const router  = express.Router();
 const { checkMLHealth }  = require('../utils/mlService');
 const { getStatus }      = require('../db/connection');
-const { Scan }           = require('../models/mongoose');
+const Scan          = require('../models/mongoose/Scan.js');
 
 router.get('/', async (req, res) => {
   const [ml, totalScans] = await Promise.all([
