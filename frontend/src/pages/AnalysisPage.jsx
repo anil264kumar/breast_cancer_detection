@@ -385,13 +385,13 @@ export default function AnalysisPage() {
               <div>
                 <label className="block text-xs font-display font-600 uppercase tracking-wide mb-1.5"
                   style={{ color:'var(--text-muted)' }}>Age</label>
-                <input className="input text-sm" placeholder="e.g. 54" type="number" min="1" max="120"
+                <input className="input text-sm" placeholder="e.g. 25" type="number" min="1" max="120"
                   value={patientAge} onChange={e => setPatientAge(e.target.value)} />
               </div>
               <div className="col-span-2">
                 <label className="block text-xs font-display font-600 uppercase tracking-wide mb-1.5"
-                  style={{ color:'var(--text-muted)' }}>Patient ID / MRN</label>
-                <input className="input text-sm" placeholder="e.g. MRN-2025-001"
+                  style={{ color:'var(--text-muted)' }}>Patient ID</label>
+                <input className="input text-sm" placeholder="e.g. 1001"
                   value={patientId} onChange={e => setPatientId(e.target.value)} />
               </div>
               <div className="col-span-2">

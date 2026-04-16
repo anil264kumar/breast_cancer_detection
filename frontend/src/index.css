@@ -37,9 +37,9 @@
     --bg-overlay:   rgba(255,255,255,0.04);
     --border:       rgba(255,255,255,0.08);
     --border-subtle:rgba(255,255,255,0.04);
-    --text-primary: #F1F5F9;
-    --text-secondary:#94A3B8;
-    --text-muted:   #475569;
+    --text-primary: #FFFFFF;
+    --text-secondary:#CBD5E1;
+    --text-muted:   #94A3B8;
     --accent:       #2DD4BF;
     --accent-light: rgba(45,212,191,0.12);
     --accent-dim:   rgba(45,212,191,0.08);

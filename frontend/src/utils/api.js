@@ -33,6 +33,84 @@ export async function getHealth() {
   return (await api.get('/health')).data;
 }
 
+// ── Auth / User Sync (Clerk) ──────────────────────────────────────────────
+// Called once after Clerk signs a user in/up to persist them in MongoDB.
+export async function syncUser(imageUrl = '') {
+  return (await api.post('/auth/sync-user', { imageUrl })).data;
+}
+
+export async function getMe() {
+  return (await api.get('/auth/me')).data;
+}
+
+// ── Local Email+Password Auth ─────────────────────────────────────────────
+// Store the JWT in localStorage so the user stays logged in on refresh.
+const LOCAL_TOKEN_KEY = 'mammoai_local_token';
+const LOCAL_USER_KEY  = 'mammoai_local_user';
+
+export function getLocalToken() {
+  return localStorage.getItem(LOCAL_TOKEN_KEY);
+}
+export function setLocalToken(token, user) {
+  localStorage.setItem(LOCAL_TOKEN_KEY, token);
+  localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(user));
+}
+export function clearLocalToken() {
+  localStorage.removeItem(LOCAL_TOKEN_KEY);
+  localStorage.removeItem(LOCAL_USER_KEY);
+}
+export function getStoredLocalUser() {
+  try { return JSON.parse(localStorage.getItem(LOCAL_USER_KEY)); } catch { return null; }
+}
+
+// Attach JWT Bearer token to every request if present
+api.interceptors.request.use((config) => {
+  const localToken = getLocalToken();
+  if (localToken && !config.headers['authorization']) {
+    config.headers['authorization'] = `Bearer ${localToken}`;
+    
+    // Transparently masquerade as Clerk headers so backend routes (scans, predicts, etc.) 
+    // work exactly the same without rewriting them.
+    const user = getStoredLocalUser();
+    if (user && !config.headers['x-clerk-user-id']) {
+      config.headers['x-clerk-user-id'] = user.id || user._id;
+      config.headers['x-clerk-user-email'] = user.email;
+      config.headers['x-clerk-user-name'] = user.fullName || `${user.firstName} ${user.lastName}`.trim();
+    }
+  }
+  return config;
+});
+
+export async function localRegister(firstName, lastName, email, password) {
+  const res = await api.post('/auth/register', { firstName, lastName, email, password });
+  if (res.data.token) setLocalToken(res.data.token, res.data.user);
+  return res.data;
+}
+
+export async function localLogin(email, password) {
+  const res = await api.post('/auth/login', { email, password });
+  if (res.data.token) setLocalToken(res.data.token, res.data.user);
+  return res.data;
+}
+
+export async function getLocalProfile() {
+  return (await api.get('/auth/profile')).data;
+}
+
+
+export async function deleteLocalAccount() {
+  return (await api.delete('/auth/account')).data;
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────
+export async function getNotifications() {
+  return (await api.get('/notifications')).data;
+}
+
+export async function markNotificationsRead(ids = []) {
+  return (await api.patch('/notifications/mark-read', { ids })).data;
+}
+
 // ── Predict ───────────────────────────────────────────────────────────────
 export async function predictImage(file, patientMeta = {}, onProgress) {
   const fd = new FormData();

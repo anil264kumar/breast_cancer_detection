@@ -76,12 +76,12 @@ export default function LandingPage() {
           </svg>
         </div>
 
-        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+        {/* <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
           className="mb-6">
           <span className="badge badge-accent">
             <Globe size={10} /> Clinical-Grade AI Platform · v2.0
           </span>
-        </motion.div>
+        </motion.div> */}
 
         <motion.h1
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.6 }}
@@ -181,7 +181,7 @@ export default function LandingPage() {
             </button>
           </Link>
           <p className="text-xs mt-4" style={{ color: 'var(--text-muted)' }}>
-            Free · No credit card required · Research use only
+           Research use only
           </p>
         </motion.div>
       </section>
@@ -189,9 +189,9 @@ export default function LandingPage() {
       {/* ── Footer ── */}
       <footer className="border-t py-8 px-6 text-center text-xs"
         style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
-        <p>MammoAI Clinical · Mini-Project I (7CS345) · Walchand College of Engineering, Sangli · AY 2025–26</p>
-        <p className="mt-2">Dataset: Mammogram Mastery · DOI: 10.17632/fvjhtskg93.1 · CC BY 4.0</p>
-        <p className="mt-2 font-600 text-orange-500">⚠ For research and educational use only — not approved for clinical diagnosis</p>
+        <p>MammoAI Clinical · Mini-Project II · Walchand College of Engineering, Sangli · AY 2025–26</p>
+
+      
       </footer>
     </div>
   );

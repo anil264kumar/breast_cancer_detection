@@ -8,7 +8,9 @@ import {
   XCircle, Loader2, Database, Bell, Shield, Info
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { getHealth, clearAllScans } from '../utils/api';
+import { useLocalAuth } from '../context/LocalAuthContext';
+import { getHealth, clearAllScans, deleteLocalAccount } from '../utils/api';
+import { useNavigate } from 'react-router-dom';
 
 function Section({ title, icon: Icon, children }) {
   return (
@@ -44,6 +46,8 @@ function ToggleSwitch({ checked, onChange }) {
 export default function SettingsPage() {
   const { theme, toggle, isDark } = useTheme();
   const { user } = useUser();
+  const { localUser, logoutLocal } = useLocalAuth();
+  const navigate = useNavigate();
   const [health, setHealth] = useState(null);
   const [healthLoading, setHealthLoading] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
@@ -215,28 +219,38 @@ export default function SettingsPage() {
         </div>
       </Section>
 
-      {/* ── Clerk profile button ── */}
+      {/* ── Account & Security (Clerk OR Local User) ── */}
       <Section title="Account & Security" icon={Shield}>
         <div className="space-y-4">
           <div className="flex items-center gap-4 p-4 rounded-xl" style={{ background:'var(--bg-raised)' }}>
-            {user?.imageUrl && (
-              <img src={user.imageUrl} alt="" className="w-12 h-12 rounded-full border-2" style={{ borderColor:'var(--accent)' }} />
+            {(user?.imageUrl || localUser?.imageUrl) ? (
+              <img src={user?.imageUrl || localUser?.imageUrl} alt="" className="w-12 h-12 rounded-full border-2" style={{ borderColor:'var(--accent)' }} />
+            ) : (
+              <div className="w-12 h-12 rounded-full border-2 flex items-center justify-center font-display font-700 text-xl" style={{ borderColor:'var(--accent)', background:'var(--bg-surface)' }}>
+                {(user?.firstName || localUser?.firstName || 'D')[0].toUpperCase()}
+              </div>
             )}
             <div>
-              <p className="font-display font-600 text-sm">{user?.firstName} {user?.lastName}</p>
+              <p className="font-display font-600 text-sm">
+                {user ? `${user.firstName || ''} ${user.lastName || ''}` : `${localUser?.firstName || ''} ${localUser?.lastName || ''}`}
+              </p>
               <p className="font-mono text-xs mt-0.5" style={{ color:'var(--text-muted)' }}>
-                {user?.primaryEmailAddress?.emailAddress}
+                {user ? user.primaryEmailAddress?.emailAddress : localUser?.email}
               </p>
             </div>
-            <button
-              onClick={() => setShowProfile(s => !s)}
-              className="btn-secondary ml-auto text-sm"
-            >
-              {showProfile ? 'Hide' : 'Manage Account'}
-            </button>
+            
+            {user && (
+              <button
+                onClick={() => setShowProfile(s => !s)}
+                className="btn-secondary ml-auto text-sm"
+              >
+                {showProfile ? 'Hide' : 'Manage Account'}
+              </button>
+            )}
           </div>
 
-          {showProfile && (
+          {/* Clerk Profile */}
+          {showProfile && user && (
             <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }}>
               <UserProfile
                 appearance={{
@@ -248,6 +262,33 @@ export default function SettingsPage() {
                   }
                 }}
               />
+            </motion.div>
+          )}
+
+          {/* Local User Management */}
+          {!user && localUser && (
+            <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} className="p-4 rounded-xl border border-red-500/20 bg-red-500/5">
+              <h4 className="font-display font-600 text-sm text-red-500 mb-2">Danger Zone</h4>
+              <p className="text-xs text-secondary mb-4">
+                Deleting your account will immediately log you out and schedule your data for permanent deletion within 30 days. This action cannot be easily reversed.
+              </p>
+              <button 
+                onClick={async () => {
+                  if (confirm('Are you absolutely sure you want to deactivate and schedule your account for deletion?')) {
+                    try {
+                      await deleteLocalAccount();
+                      logoutLocal();
+                      toast.success('Account deactivated successfully.');
+                      navigate('/');
+                    } catch (err) {
+                      toast.error('Failed to delete account.');
+                    }
+                  }
+                }}
+                className="btn-danger w-full sm:w-auto"
+              >
+                Delete my account
+              </button>
             </motion.div>
           )}
 

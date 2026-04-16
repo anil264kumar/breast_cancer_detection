@@ -90,10 +90,10 @@ export default function DashboardPage() {
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="font-display font-700 text-2xl mb-1">
           Good {new Date().getHours() < 12 ? 'morning' : 'afternoon'},{' '}
-          {user?.firstName || 'Doctor'} 👋
+          {user?.firstName || 'Doctor'}
         </h1>
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          Your clinical summary · data from MongoDB
+          Your clinical summary
         </p>
       </motion.div>
 

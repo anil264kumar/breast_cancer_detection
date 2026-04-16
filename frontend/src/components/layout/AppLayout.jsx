@@ -4,9 +4,12 @@ import { useUser, useClerk } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Scan, FolderOpen, Settings, LogOut,
-  Menu, X, Moon, Sun, Activity, ChevronDown, Bell, User
+  Menu, X, Moon, Sun, Activity, ChevronDown, Bell, User as UserIcon
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { useLocalAuth } from '../../context/LocalAuthContext';
+import { getNotifications, markNotificationsRead } from '../../utils/api';
+import { useEffect } from 'react';
 
 const NAV = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -41,10 +44,12 @@ function Logo({ collapsed }) {
 function Sidebar({ collapsed, setCollapsed }) {
   const location = useLocation();
   const { user, signOut } = useClerk();
+  const { localUser, logoutLocal } = useLocalAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
-    await signOut();
+    if (user) await signOut();
+    if (localUser) logoutLocal();
     navigate('/');
   };
 
@@ -104,22 +109,28 @@ function Sidebar({ collapsed, setCollapsed }) {
           {!collapsed && <span>Sign out</span>}
         </button>
 
-        {!collapsed && user && (
+        {!collapsed && (user || localUser) && (
           <div className="mt-3 p-2.5 rounded-lg flex items-center gap-2.5"
             style={{ background: 'var(--bg-raised)' }}>
-            <img
-              src={user.imageUrl}
-              alt={user.firstName}
-              className="w-7 h-7 rounded-full object-cover shrink-0"
-            />
+            {(user?.imageUrl || localUser?.imageUrl) ? (
+              <img
+                src={user?.imageUrl || localUser?.imageUrl}
+                alt="Avatar"
+                className="w-7 h-7 rounded-full object-cover shrink-0"
+              />
+            ) : (
+              <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center font-display font-700 text-xs text-white" style={{ background: 'var(--accent)' }}>
+                {(user?.firstName || localUser?.firstName || 'A')[0].toUpperCase()}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <p className="text-xs font-display font-600 leading-none truncate"
                 style={{ color: 'var(--text-primary)' }}>
-                {user.firstName} {user.lastName}
+                {user ? `${user.firstName || ''} ${user.lastName || ''}` : `${localUser.firstName || ''} ${localUser.lastName || ''}`}
               </p>
               <p className="text-[10px] font-mono truncate mt-0.5"
                 style={{ color: 'var(--text-muted)' }}>
-                {user.primaryEmailAddress?.emailAddress}
+                {user ? user.primaryEmailAddress?.emailAddress : localUser.email}
               </p>
             </div>
           </div>
@@ -132,7 +143,36 @@ function Sidebar({ collapsed, setCollapsed }) {
 function Topbar() {
   const { toggle, isDark } = useTheme();
   const { user } = useUser();
+  const { localUser } = useLocalAuth();
   const location = useLocation();
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    // Only fetch if a user is logged in
+    if (!user && !localUser) return;
+    
+    function fetchNotifs() {
+      getNotifications().then(res => setNotifications(res.notifications || [])).catch(() => {});
+    }
+
+    fetchNotifs();
+    const interval = setInterval(fetchNotifs, 15000); // Check every 15s
+    return () => clearInterval(interval);
+  }, [user, localUser]);
+
+  const handleMarkAllRead = async () => {
+    const unreadIds = notifications.filter(n => n.unread).map(n => n.id);
+    if (!unreadIds.length) return;
+    setNotifications(ns => ns.map(n => ({ ...n, unread: false })));
+    await markNotificationsRead([]); // empty array marks all read on backend
+  };
+
+  const handleMarkSingleRead = async (id, unread) => {
+    if (!unread) return;
+    setNotifications(ns => ns.map(x => x.id === id ? { ...x, unread: false } : x));
+    await markNotificationsRead([id]);
+  };
 
   const pageTitle = NAV.find(n =>
     location.pathname === n.path ||
@@ -164,21 +204,79 @@ function Topbar() {
           }
         </button>
 
-        {/* Notification bell (UI only) */}
-        <button className="btn-ghost p-2 rounded-lg relative">
-          <Bell size={16} />
-          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
-            style={{ background: 'var(--danger)' }} />
-        </button>
+        {/* Notification bell */}
+        <div className="relative">
+          <button 
+            onClick={() => setShowNotifications(s => !s)}
+            className={`btn-ghost p-2 rounded-lg relative ${showNotifications ? 'bg-[var(--bg-overlay)]' : ''}`}
+          >
+            <Bell size={16} />
+            {notifications.some(n => n.unread) && (
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
+                style={{ background: 'var(--danger)' }} />
+            )}
+          </button>
+
+          {/* Notification Dropdown */}
+          <AnimatePresence>
+            {showNotifications && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                className="absolute right-0 mt-2 w-80 rounded-xl shadow-lg border p-1"
+                style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)', zIndex: 100 }}
+              >
+                <div className="flex justify-between items-center px-3 py-2 mb-1 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+                  <h3 className="font-display font-600 text-sm">Notifications</h3>
+                  <button 
+                    onClick={handleMarkAllRead}
+                    className="text-xs text-accent hover:underline font-500"
+                  >
+                    Mark all read
+                  </button>
+                </div>
+                
+                <div className="max-h-[300px] overflow-y-auto">
+                  {notifications.map(n => (
+                    <div 
+                      key={n.id} 
+                      onClick={() => handleMarkSingleRead(n.id, n.unread)}
+                      className="p-3 mb-1 rounded-lg hover:bg-[var(--bg-overlay)] cursor-pointer flex gap-3 transition-colors"
+                      style={{ background: n.unread ? 'var(--accent-dim)' : 'transparent' }}
+                    >
+                      <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.unread ? 'bg-accent' : 'bg-transparent'}`} />
+                      <div>
+                        <p className="text-sm font-600 font-display text-primary leading-tight">{n.title}</p>
+                        <p className="text-xs text-muted mt-0.5 line-clamp-2">{n.body}</p>
+                        <p className="text-[10px] text-muted font-mono mt-1 opacity-70">
+                          {new Date(n.time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {notifications.length === 0 && (
+                    <p className="text-sm text-center py-6 text-muted">You're all caught up!</p>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* User avatar */}
-        {user && (
-          <img
-            src={user.imageUrl}
-            alt={user.firstName}
-            className="w-8 h-8 rounded-full object-cover border-2"
-            style={{ borderColor: 'var(--accent)' }}
-          />
+        {(user || localUser) && (
+          <div className="ml-2 w-8 h-8 rounded-full border-2 overflow-hidden flex items-center justify-center shrink-0"
+            style={{ borderColor: 'var(--accent)', background: 'var(--bg-raised)' }}>
+            {(user?.imageUrl || localUser?.imageUrl) ? (
+               <img src={user?.imageUrl || localUser?.imageUrl} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+               <span className="font-display font-700 text-xs" style={{ color: 'var(--text-primary)' }}>
+                 {(user?.firstName || localUser?.firstName || 'A')[0].toUpperCase()}
+               </span>
+            )}
+          </div>
         )}
       </div>
     </header>
