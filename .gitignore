@@ -28,6 +28,7 @@ venv/
 *.tflite
 backend/models/*
 !backend/models/.gitkeep
+!backend/models/mongoose/
 
 # OS
 .DS_Store
