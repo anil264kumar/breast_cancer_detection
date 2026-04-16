@@ -12,6 +12,7 @@ const { upload }           = require('../middleware/upload');
 const { callMLService }    = require('../utils/mlService');
 const { recordScanStats }  = require('../utils/analyticsHelper');
 const { Scan, Patient, Notification, User } = require('../models/mongoose');
+const cloudinary           = require('../utils/cloudinary');
 
 router.post('/', upload.single('file'), async (req, res) => {
   if (!req.file) {
@@ -19,7 +20,7 @@ router.post('/', upload.single('file'), async (req, res) => {
   }
 
   const imagePath = req.file.path;
-  const imageUrl  = `/uploads/${req.file.filename}`;
+  let imageUrl = null;
 
   // Pull Clerk user context from request headers (set by frontend)
   const clerkUserId    = req.headers['x-clerk-user-id']    || 'anonymous';
@@ -37,8 +38,14 @@ router.post('/', upload.single('file'), async (req, res) => {
   } = req.body;
 
   try {
-    // ── 1. Call Python ML service ────────────────────────────────────
-    const { demo, data } = await callMLService(imagePath);
+    // ── 1. Upload to Cloudinary & Call Python ML service ─────────────
+    const [mlResult, uploadResult] = await Promise.all([
+      callMLService(imagePath),
+      cloudinary.uploader.upload(imagePath, { folder: 'mammoai_scans' })
+    ]);
+    
+    const { demo, data } = mlResult;
+    imageUrl = uploadResult.secure_url;
 
     // ── 2. Resolve / create Patient document ─────────────────────────
     let patientId = null;
@@ -134,8 +141,10 @@ router.post('/', upload.single('file'), async (req, res) => {
 
   } catch (err) {
     console.error('[Predict] Error:', err.message);
-    if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
     return res.status(500).json({ error: 'Prediction pipeline failed.', detail: err.message });
+  } finally {
+    // Always delete the local temporary image to preserve Render ephemeral disk
+    if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
   }
 });
 

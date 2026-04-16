@@ -8,7 +8,10 @@
 
 import axios from 'axios';
 
-const api = axios.create({ baseURL: '/api', timeout: 60_000 });
+const api = axios.create({ 
+  baseURL: import.meta.env.VITE_API_URL || '/api', 
+  timeout: 60_000 
+});
 
 // ── Attach Clerk user headers to every request ────────────────────────────
 // Call setClerkUser(user) once after login (done in main.jsx)
