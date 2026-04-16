@@ -15,7 +15,7 @@ require("dotenv").config({
 });
 const mongoose = require("mongoose");
 const { connectDB, disconnectDB } = require("../db/connection");
-const { Patient, Scan, Analytics } = require("../models/mongoose");
+const { Patient, Scan, Analytics } = require("../models");
 
 // ── Demo Clerk user ID (replace with your real Clerk user ID after login) ─
 const DEMO_USER_ID = "demo_clinician_001";

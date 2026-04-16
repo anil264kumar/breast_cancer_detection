@@ -13,7 +13,7 @@
 
 const express = require('express');
 const router  = express.Router();
-const { Scan } = require('../models/mongoose');
+const { Scan } = require('../models');
 const { getDailyAnalytics, getLifetimeTotals } = require('../utils/analyticsHelper');
 const { validate, scanUpdateSchema, querySchema } = require('../middleware/validate');
 

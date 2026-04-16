@@ -11,7 +11,7 @@ const fs       = require('fs');
 const { upload }           = require('../middleware/upload');
 const { callMLService }    = require('../utils/mlService');
 const { recordScanStats }  = require('../utils/analyticsHelper');
-const { Scan, Patient, Notification, User } = require('../models/mongoose');
+const { Scan, Patient, Notification, User } = require('../models');
 const cloudinary           = require('../utils/cloudinary');
 
 router.post('/', upload.single('file'), async (req, res) => {

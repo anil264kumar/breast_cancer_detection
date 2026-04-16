@@ -5,7 +5,7 @@
  * Called after every successful scan save.
  */
 
-const { Analytics } = require('../models/mongoose');
+const { Analytics } = require('../models');
 
 async function recordScanStats(clerkUserId, scan) {
   const date = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'

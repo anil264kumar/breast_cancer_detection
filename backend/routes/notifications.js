@@ -1,6 +1,6 @@
 const express = require('express');
 const router  = express.Router();
-const { Notification, User } = require('../models/mongoose');
+const { Notification, User } = require('../models');
 
 // Helper to get dbUser from auth headers 
 async function getDbUser(req) {

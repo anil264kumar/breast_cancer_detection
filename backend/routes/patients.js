@@ -10,7 +10,7 @@
 
 const express = require('express');
 const router  = express.Router();
-const { Patient, Scan } = require('../models/mongoose');
+const { Patient, Scan } = require('../models');
 const { validate, patientSchema } = require('../middleware/validate');
 
 // ── GET /api/patients ─────────────────────────────────────────────────────

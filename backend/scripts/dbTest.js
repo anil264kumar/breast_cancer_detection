@@ -9,7 +9,7 @@ require("dotenv").config({
   path: require("path").join(__dirname, "..", ".env"),
 });
 const { connectDB, disconnectDB, getStatus } = require("../db/connection");
-const { Patient, Scan, Analytics } = require("../models/mongoose");
+const { Patient, Scan, Analytics } = require("../models");
 
 async function test() {
   console.log("\n🔍  MammoAI Clinical — Database Connection Test\n");
