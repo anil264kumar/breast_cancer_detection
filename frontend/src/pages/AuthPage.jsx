@@ -31,8 +31,8 @@ function BrandPanel() {
 
       <div>
         <h2 className="font-display font-700 text-4xl leading-tight mb-6">
-          Clinical-grade<br />
-          <span style={{ color: 'var(--accent)' }}>breast cancer</span><br />
+          <br />
+          <span style={{ color: 'var(--accent)' }}>Breast cancer</span><br />
           detection
         </h2>
         <div className="space-y-3">
@@ -53,7 +53,7 @@ function BrandPanel() {
 
       <div className="card p-4">
         <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-          <span className="font-600" style={{ color: 'var(--warning)' }}> Research Only:</span>{' '}
+          {/* <span className="font-600" style={{ color: 'var(--warning)' }}> Research Only:</span>{' '} */}
           Developed as Mini-Project at Walchand College of Engineering, Sangli.
          
         </p>

@@ -347,7 +347,7 @@ export default function AnalysisPage() {
       toast.success(data.class === 'cancer' ? '⚠ Cancer detected — review required' : '✓ Saved to MongoDB — Non-cancer');
     } catch (err) {
       clearInterval(ticker);
-      setError(err?.response?.data?.error || 'Backend connection failed. Ensure server runs on port 5000.');
+      setError(err?.response?.data?.error || 'Backend connection failed.');
       toast.error('Analysis failed');
     } finally {
       setLoading(false);

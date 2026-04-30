@@ -3,7 +3,7 @@
 > **Mini-Project I (7CS345) · Walchand College of Engineering, Sangli · AY 2025–26**
 > Under the guidance of Ms. N.L. Mudegol · Department of Computer Science and Engineering
 
-Clinical-grade AI breast cancer detection platform — React + Node.js + **MongoDB + Mongoose** + Clerk Auth.
+Breast cancer detection platform — React + Node.js + **MongoDB + Mongoose** + Clerk Auth.
 
 ---
 
@@ -15,8 +15,8 @@ Clinical-grade AI breast cancer detection platform — React + Node.js + **Mongo
 | Auth         | Clerk (sign-in · sign-up · Google SSO · MFA)                 |
 | Backend API  | Node.js · Express · Multer · Axios · Morgan · Joi            |
 | **Database** | **MongoDB · Mongoose ODM · 3 schemas · indexes · analytics** |
-| ML Service   | Python · TensorFlow/Keras · Flask (separate process)         |
-| Dataset      | Mammogram Mastery · DOI: 10.17632/fvjhtskg93.1               |
+| ML Service   | Python · TensorFlow/Keras         |
+
 
 ---
 
@@ -29,7 +29,7 @@ mammoai_clinical (database)
 └── analytics       — pre-aggregated daily stats per clinician (powers charts)
 ```
 
-### Collections at a glance
+<!-- ### Collections at a glance
 
 | Collection  | Key Fields                                                          |
 | ----------- | ------------------------------------------------------------------- |
@@ -37,7 +37,7 @@ mammoai_clinical (database)
 | `scans`     | patientId, classification, probability, riskLevel, heatmap, metrics |
 | `analytics` | clerkUserId, date (YYYY-MM-DD), totalScans, cancerCount, highRisk   |
 
----
+--- -->
 
 ## Prerequisites
 
@@ -64,9 +64,9 @@ mammoai_clinical/
 
 ---
 
-### Step 2 — Set Up MongoDB (choose ONE option)
+### Step 2 — Set Up MongoDB 
 
-#### Option A — MongoDB Atlas (Cloud · Free · Recommended)
+####  MongoDB Atlas (Cloud · Free )
 
 No installation needed. Works from anywhere.
 
@@ -81,29 +81,11 @@ No installation needed. Works from anywhere.
    ```
 7. Open `backend/.env` and set:
    ```
-   MONGODB_URI=mongodb+srv://youruser:yourpassword@cluster0.xxxxx.mongodb.net/mammoai_clinical?retryWrites=true&w=majority
+   MONGODB_URI=your_mongo_db_uri
    ```
 
-#### Option B — Local MongoDB (on your machine)
 
-1. Download **MongoDB Community Server** from https://www.mongodb.com/try/download/community
-2. Install it — on Windows, check the box to install as a Windows service
-3. MongoDB starts automatically. Your connection string is already correct:
-   ```
-   MONGODB_URI=mongodb://localhost:27017/mammoai_clinical
-   ```
-   (This is the default in `backend/.env` — no change needed!)
 
-Verify MongoDB is running:
-
-```bash
-# Windows — check Services for "MongoDB"
-# Mac/Linux:
-mongosh
-# Should open MongoDB shell. Type 'exit' to close.
-```
-
----
 
 ### Step 3 — Get Your Clerk Key (5 minutes · Free)
 
@@ -146,33 +128,9 @@ Expected output:
 
 ---
 
-### Step 5 — Seed Demo Data (Optional but recommended)
 
-Populates MongoDB with 8 realistic patients and 20 scan records across 14 days:
 
-```bash
-# In the backend folder (while server is running):
-npm run seed
-```
-
-Output:
-
-```
-🌱  Seeding MammoAI Clinical database...
-
-    Patients: inserted 8
-    Scans: inserted 20
-    Analytics: seeded 15 daily records
-
-  Seed complete!
-```
-
-> **Note**: The seed uses a fixed demo user ID. After logging in with Clerk,
-> your real analyses will appear alongside or instead of the seed data.
-
----
-
-### Step 6 — Start the Frontend
+### Step 5 — Start the Frontend
 
 Open a **second terminal**:
 
@@ -186,7 +144,7 @@ npm run dev          # Start frontend on port 3000
 
 ---
 
-### Step 7 — Open the App
+### Step 6 — Open the App
 
 Go to **http://localhost:3000**
 
@@ -347,11 +305,11 @@ mammoai_clinical/
 
 ---
 
-## Dataset Citation
+<!-- ## Dataset Citation
 
 > Aqdar, K.B. et al. (2024). _Mammogram Mastery: A Robust Dataset for Breast Cancer Detection._
-> Mendeley Data, V1. https://doi.org/10.17632/fvjhtskg93.1
+> Mendeley Data, V1. https://doi.org/10.17632/fvjhtskg93.1 -->
 
 ---
 
-⚠ **For research and educational use only — not approved for clinical patient care.**
+
