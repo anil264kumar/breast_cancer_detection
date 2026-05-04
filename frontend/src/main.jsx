@@ -5,7 +5,6 @@ import { ClerkProvider, useUser } from '@clerk/clerk-react';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
 import { ThemeProvider } from './context/ThemeContext';
-import { LocalAuthProvider } from './context/LocalAuthContext';
 import { setClerkUser, syncUser } from './utils/api';
 import './index.css';
 
@@ -20,11 +19,7 @@ function ClerkUserSync() {
 
   React.useEffect(() => {
     if (!isLoaded) return;
-
-    // Update in-memory Clerk user for request headers
     setClerkUser(user || null);
-
-    // Sync to MongoDB once per user session (not on every re-render)
     if (user && user.id !== lastSyncedId.current) {
       lastSyncedId.current = user.id;
       syncUser(user.imageUrl || '')
@@ -36,34 +31,41 @@ function ClerkUserSync() {
   return null;
 }
 
+// With routing="virtual" on <SignIn>/<SignUp>, Clerk manages all step
+// navigation (factor-one → factor-two → OTP) internally without
+// changing the browser URL. No navigate prop needed.
+function ClerkWithRouter({ children }) {
+  return (
+    <ClerkProvider publishableKey={CLERK_KEY}>
+      <ClerkUserSync />
+      {children}
+    </ClerkProvider>
+  );
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <ClerkProvider
-      publishableKey={CLERK_KEY}
-    >
-      <ClerkUserSync />
-      <LocalAuthProvider>
+    <BrowserRouter>
+      <ClerkWithRouter>
         <ThemeProvider>
-          <BrowserRouter>
-            <App />
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: 'var(--bg-surface)',
-                  color:      'var(--text-primary)',
-                  border:     '1px solid var(--border)',
-                  borderRadius: '9px',
-                  fontFamily: 'DM Sans, sans-serif',
-                  fontSize:   '0.875rem',
-                  boxShadow:  'var(--shadow)',
-                },
-              }}
-            />
-          </BrowserRouter>
+          <App />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: 'var(--bg-surface)',
+                color:      'var(--text-primary)',
+                border:     '1px solid var(--border)',
+                borderRadius: '9px',
+                fontFamily: 'DM Sans, sans-serif',
+                fontSize:   '0.875rem',
+                boxShadow:  'var(--shadow)',
+              },
+            }}
+          />
         </ThemeProvider>
-      </LocalAuthProvider>
-    </ClerkProvider>
+      </ClerkWithRouter>
+    </BrowserRouter>
   </React.StrictMode>
 );

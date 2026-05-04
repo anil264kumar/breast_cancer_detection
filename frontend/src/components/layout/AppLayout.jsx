@@ -7,7 +7,6 @@ import {
   Menu, X, Moon, Sun, Activity, ChevronDown, Bell, User as UserIcon
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import { useLocalAuth } from '../../context/LocalAuthContext';
 import { getNotifications, markNotificationsRead } from '../../utils/api';
 import { useEffect } from 'react';
 
@@ -44,12 +43,10 @@ function Logo({ collapsed }) {
 function Sidebar({ collapsed, setCollapsed }) {
   const location = useLocation();
   const { user, signOut } = useClerk();
-  const { localUser, logoutLocal } = useLocalAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
-    if (user) await signOut();
-    if (localUser) logoutLocal();
+    await signOut();
     navigate('/');
   };
 
@@ -109,28 +106,28 @@ function Sidebar({ collapsed, setCollapsed }) {
           {!collapsed && <span>Sign out</span>}
         </button>
 
-        {!collapsed && (user || localUser) && (
+        {!collapsed && user && (
           <div className="mt-3 p-2.5 rounded-lg flex items-center gap-2.5"
             style={{ background: 'var(--bg-raised)' }}>
-            {(user?.imageUrl || localUser?.imageUrl) ? (
+            {user.imageUrl ? (
               <img
-                src={user?.imageUrl || localUser?.imageUrl}
+                src={user.imageUrl}
                 alt="Avatar"
                 className="w-7 h-7 rounded-full object-cover shrink-0"
               />
             ) : (
               <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center font-display font-700 text-xs text-white" style={{ background: 'var(--accent)' }}>
-                {(user?.firstName || localUser?.firstName || 'A')[0].toUpperCase()}
+                {(user.firstName || 'A')[0].toUpperCase()}
               </div>
             )}
             <div className="flex-1 min-w-0">
               <p className="text-xs font-display font-600 leading-none truncate"
                 style={{ color: 'var(--text-primary)' }}>
-                {user ? `${user.firstName || ''} ${user.lastName || ''}` : `${localUser.firstName || ''} ${localUser.lastName || ''}`}
+                {`${user.firstName || ''} ${user.lastName || ''}`.trim()}
               </p>
               <p className="text-[10px] font-mono truncate mt-0.5"
                 style={{ color: 'var(--text-muted)' }}>
-                {user ? user.primaryEmailAddress?.emailAddress : localUser.email}
+                {user.primaryEmailAddress?.emailAddress}
               </p>
             </div>
           </div>
@@ -143,14 +140,12 @@ function Sidebar({ collapsed, setCollapsed }) {
 function Topbar() {
   const { toggle, isDark } = useTheme();
   const { user } = useUser();
-  const { localUser } = useLocalAuth();
   const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
-    // Only fetch if a user is logged in
-    if (!user && !localUser) return;
+    if (!user) return;
     
     function fetchNotifs() {
       getNotifications().then(res => setNotifications(res.notifications || [])).catch(() => {});
@@ -159,7 +154,7 @@ function Topbar() {
     fetchNotifs();
     const interval = setInterval(fetchNotifs, 15000); // Check every 15s
     return () => clearInterval(interval);
-  }, [user, localUser]);
+  }, [user]);
 
   const handleMarkAllRead = async () => {
     const unreadIds = notifications.filter(n => n.unread).map(n => n.id);
@@ -266,14 +261,14 @@ function Topbar() {
         </div>
 
         {/* User avatar */}
-        {(user || localUser) && (
+        {user && (
           <div className="ml-2 w-8 h-8 rounded-full border-2 overflow-hidden flex items-center justify-center shrink-0"
             style={{ borderColor: 'var(--accent)', background: 'var(--bg-raised)' }}>
-            {(user?.imageUrl || localUser?.imageUrl) ? (
-               <img src={user?.imageUrl || localUser?.imageUrl} alt="Avatar" className="w-full h-full object-cover" />
+            {user.imageUrl ? (
+               <img src={user.imageUrl} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
                <span className="font-display font-700 text-xs" style={{ color: 'var(--text-primary)' }}>
-                 {(user?.firstName || localUser?.firstName || 'A')[0].toUpperCase()}
+                 {(user.firstName || 'A')[0].toUpperCase()}
                </span>
             )}
           </div>

@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
-import { useLocalAuth } from './context/LocalAuthContext';
 import AppLayout from './components/layout/AppLayout';
 import LandingPage from './pages/LandingPage';
 import DashboardPage from './pages/DashboardPage';
@@ -10,13 +9,11 @@ import ReportPage from './pages/ReportPage';
 import SettingsPage from './pages/SettingsPage';
 import AuthPage from './pages/AuthPage';
 
-// Allows access if signed in via Clerk OR via local email/password.
+// Protects routes — only Clerk auth is used now.
 function ProtectedRoute({ children }) {
   const { isSignedIn, isLoaded } = useAuth();
-  const { localUser, isLocalLoaded } = useLocalAuth();
 
-  // Wait for both auth systems to initialise before deciding
-  if (!isLoaded || !isLocalLoaded) {
+  if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
         <div className="flex flex-col items-center gap-4">
@@ -30,7 +27,7 @@ function ProtectedRoute({ children }) {
     );
   }
 
-  if (!isSignedIn && !localUser) return <Navigate to="/auth" replace />;
+  if (!isSignedIn) return <Navigate to="/auth" replace />;
   return children;
 }
 
