@@ -61,17 +61,31 @@ function Sidebar({ collapsed, setCollapsed }) {
       }}
     >
       {/* Logo + collapse toggle */}
-      <div className="flex items-center justify-between mb-6">
-        <Logo collapsed={collapsed} />
-        <button
-          onClick={() => setCollapsed(c => !c)}
-          className="btn-ghost p-1.5 rounded-lg shrink-0"
-          style={{ minWidth: 0 }}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {collapsed ? <Menu size={16} /> : <X size={16} />}
-        </button>
-      </div>
+      {collapsed ? (
+        /* Collapsed: show only the toggle button, perfectly centered */
+        <div className="flex justify-center mb-6">
+          <button
+            onClick={() => setCollapsed(c => !c)}
+            className="btn-ghost p-1.5 rounded-lg"
+            title="Expand sidebar"
+          >
+            <Menu size={16} />
+          </button>
+        </div>
+      ) : (
+        /* Expanded: logo on left, X button on right */
+        <div className="flex items-center justify-between mb-6">
+          <Logo collapsed={false} />
+          <button
+            onClick={() => setCollapsed(c => !c)}
+            className="btn-ghost p-1.5 rounded-lg shrink-0"
+            style={{ minWidth: 0 }}
+            title="Collapse sidebar"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       {/* Nav links */}
       <nav className="flex flex-col gap-1 flex-1">
