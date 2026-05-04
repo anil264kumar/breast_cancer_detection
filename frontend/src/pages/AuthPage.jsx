@@ -63,18 +63,31 @@ export default function AuthPage({ mode }) {
   const isSignUp = mode === 'sign-up' || location.pathname === '/auth/sign-up';
 
   const clerkAppearance = {
+    // Global color tokens — fixes dark mode visibility for divider text,
+    // field labels, input placeholders etc. colorPrimary is intentionally
+    // omitted so Clerk keeps its native blue for the CONTINUE button.
+    variables: {
+      colorText:            isDark ? '#FFFFFF'  : '#0F172A',
+      colorTextSecondary:   isDark ? '#CBD5E1'  : '#475569',
+      colorBackground:      isDark ? '#131B26'  : '#FFFFFF',
+      colorInputBackground: isDark ? '#1A2435'  : '#FFFFFF',
+      colorInputText:       isDark ? '#FFFFFF'  : '#0F172A',
+      colorDanger:          isDark ? '#F87171'  : '#DC2626',
+      borderRadius:         '8px',
+    },
     elements: {
-      rootBox: 'w-full',
-      card: 'w-full shadow-none border-0 bg-transparent p-0',
-      headerTitle: 'hidden',
-      headerSubtitle: 'hidden',
-      formButtonPrimary: 'btn-primary w-full justify-center py-2.5',
-      footerActionLink: 'text-accent font-600',
-      formFieldInput: 'input',
-      formFieldLabel: 'text-xs font-display font-600 uppercase tracking-wide mb-1',
-      dividerLine: 'bg-border',
+      rootBox:                  'w-full',
+      card:                     'w-full shadow-none border-0 bg-transparent p-0',
+      headerTitle:              'hidden',
+      headerSubtitle:           'hidden',
+      // No btn-primary here — lets Clerk keep its native blue button color
+      formButtonPrimary:        'w-full justify-center py-2.5',
+      footerActionLink:         'text-accent font-600',
+      formFieldInput:           'input',
+      formFieldLabel:           'text-xs font-display font-600 uppercase tracking-wide mb-1',
+      dividerLine:              'bg-border',
       socialButtonsBlockButton: 'btn-secondary w-full justify-center',
-      footer: 'hidden',
+      footer:                   'hidden',
     },
   };
 
