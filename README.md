@@ -5,6 +5,8 @@
 
 Breast cancer detection platform — React + Node.js + **MongoDB + Mongoose** + Clerk Auth.
 
+
+Kaggle Notebook Link: https://www.kaggle.com/code/escurbell/v8-breast-cancer
 ---
 
 ## Tech Stack
