@@ -1,30 +1,19 @@
-"""
-ml_server.py
-============
-Minimal Flask server that loads your trained EfficientNetB0 model
-and exposes a /predict endpoint consumed by the Node.js backend.
-
-Usage
------
-  pip install flask flask-cors tensorflow opencv-python numpy
-  python ml_server.py
-
-The server starts on port 8000.  The Node.js backend (port 5000)
-will automatically detect it and switch from Demo Mode to live predictions.
-
-Place this file in the same directory as  models/breast_cancer_final.h5
-"""
-
 import os, base64, cv2, numpy as np
+
+# Suppress noisy TF/GPU warnings — MUST be before `import tensorflow`
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = ''  # force CPU, no CUDA errors
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import tensorflow as tf
 
 # ── Configuration ────────────────────────────────────────
-MODEL_PATH  = os.path.join('models', 'breast_cancer_final.h5')
+MODEL_PATH  = os.path.join('models', 'breast_cancer_final.keras')
 IMG_SIZE    = 224
-THRESHOLD   = 0.50   # Lower (e.g. 0.40) → higher recall, more false positives
-PORT        = 8000
+THRESHOLD   = 0.50
+PORT        = int(os.environ.get('PORT', 8000))  # HF Spaces uses 7860, local uses 8000
 
 # ── Load model ───────────────────────────────────────────
 print(f'\n[MammoAI] Loading model from {MODEL_PATH} ...')
@@ -60,22 +49,33 @@ def preprocess(path: str) -> np.ndarray:
 
 
 # ── Grad-CAM ──────────────────────────────────────────────
-def get_gradcam(img_array: np.ndarray, last_conv: str = 'top_conv') -> np.ndarray | None:
+def get_gradcam(img_array: np.ndarray) -> np.ndarray | None:
+    """
+    Grad-CAM using the EfficientNetB0 sub-model's output tensor.
+    effnet.output IS in the outer model's computation graph (connects to GAP/GMP),
+    so TF can trace gradients from model.inputs all the way through it.
+    """
     try:
+        # gap_layer.input IS effnet's output tensor in the OUTER model's graph.
+        # It's connected to input_1 (not input_2 which is EfficientNet's internal input).
+        # Using effnet.output directly fails because it traces back to input_2 (sub-model).
+        gap_layer = model.get_layer('global_average_pooling2d')
+        effnet_outer_output = gap_layer.input   # shape: (None, 7, 7, 1280)
+
         grad_model = tf.keras.Model(
-            inputs=model.inputs,
-            outputs=[model.get_layer(last_conv).output, model.output]
+            inputs  = model.inputs,
+            outputs = [effnet_outer_output, model.output]
         )
         with tf.GradientTape() as tape:
             conv_out, preds = grad_model(img_array)
             score = preds[:, 0]
-        grads       = tape.gradient(score, conv_out)
-        pooled      = tf.reduce_mean(grads, axis=(0, 1, 2))
-        conv_out    = conv_out[0]
-        heatmap     = conv_out @ pooled[..., tf.newaxis]
-        heatmap     = tf.squeeze(heatmap)
-        heatmap     = tf.maximum(heatmap, 0)
-        max_val     = tf.math.reduce_max(heatmap)
+        grads    = tape.gradient(score, conv_out)
+        pooled   = tf.reduce_mean(grads, axis=(0, 1, 2))
+        conv_out = conv_out[0]
+        heatmap  = conv_out @ pooled[..., tf.newaxis]
+        heatmap  = tf.squeeze(heatmap)
+        heatmap  = tf.maximum(heatmap, 0)
+        max_val  = tf.math.reduce_max(heatmap)
         if max_val > 0:
             heatmap = heatmap / max_val
         return heatmap.numpy()
@@ -136,6 +136,7 @@ def predict():
         hm = get_gradcam(img_array)
         if hm is not None:
             heatmap_b64 = overlay_heatmap(tmp_path, hm)
+            print('[Grad-CAM] Heatmap generated successfully.')
 
         return jsonify({
             'prediction':  pred,
@@ -156,10 +157,11 @@ def predict():
                 'precision': '87.4%',
             },
             'model_info': {
-                'architecture': 'EfficientNetB0',
+                'architecture': 'EfficientNetB0 + Dual Pooling (GAP + GMP)',
                 'training':     'Transfer Learning — ImageNet → Mammogram Mastery',
                 'dataset':      'Mammogram Mastery · DOI: 10.17632/fvjhtskg93.1',
                 'classes':      ['non-cancer', 'cancer'],
+                'params':       '5.49M total (11.17MB trainable)',
             },
             'demo_mode': False,
         })
