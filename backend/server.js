@@ -35,17 +35,21 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
 // ── CORS ──────────────────────────────────────────────────────────────────
 const allowed = new Set([
-  process.env.FRONTEND_URL || "http://localhost:3000",
+  process.env.FRONTEND_URL,
   "http://localhost:3000",
   "http://localhost:5173",
   "http://127.0.0.1:3000",
-]);
+].filter(Boolean));
+
 app.use(
   cors({
-    origin: (origin, cb) =>
-      !origin || allowed.has(origin)
-        ? cb(null, true)
-        : cb(new Error(`CORS blocked: ${origin}`)),
+    origin: (origin, cb) => {
+      // Allow no-origin (curl / server-to-server), localhost, set origins, and any *.vercel.app
+      if (!origin) return cb(null, true);
+      if (allowed.has(origin)) return cb(null, true);
+      if (origin.endsWith(".vercel.app")) return cb(null, true);
+      return cb(new Error(`CORS blocked: ${origin}`));
+    },
     methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: [
       "Content-Type",
